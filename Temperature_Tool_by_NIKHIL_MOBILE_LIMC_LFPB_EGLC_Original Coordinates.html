@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#060810">
+<title>Temperature Tool by NIKHIL</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#060810;--bg2:#0c0f1a;--bg3:#111525;--bg4:#161c2e;
+  --b1:#1e2640;--b2:#2a3558;--b3:#3d4f7a;
+  --t1:#c8d4f0;--t2:#7a90c0;--t3:#3d5280;--t4:#1e2e50;
+  --g:#00ffb3;--gbg:rgba(0,255,179,0.08);--gbr:rgba(0,255,179,0.25);
+  --a:#ffb347;--abg:rgba(255,179,71,0.08);--abr:rgba(255,179,71,0.25);
+  --p:#7b8fff;--pbg:rgba(123,143,255,0.08);--pbr:rgba(123,143,255,0.25);
+  --r:#ff4d6d;--rbg:rgba(255,77,109,0.08);
+  --milan:#00ffb3;--paris:#7b8fff;--london:#ffb347;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Space Grotesk',sans-serif;
+  --radius:10px;--radius-sm:6px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--t1);font-family:var(--mono);font-size:13px;line-height:1.5;min-height:100vh;overflow-x:hidden}
+
+/* ─── HEADER ─── */
+.hdr{
+  position:sticky;top:0;z-index:100;
+  background:rgba(6,8,16,0.92);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--b1);
+  padding:10px 14px 8px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.brand-wrap{display:flex;flex-direction:column;gap:0}
+.brand-logo{display:flex;align-items:center;gap:8px;line-height:1}
+.brand-icon{
+  width:32px;height:32px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--g) 0%,#00c9ff 100%);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;box-shadow:0 0 12px rgba(0,255,179,0.3);
+}
+.brand-text{display:flex;flex-direction:column;gap:1px}
+.brand-main{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;letter-spacing:.5px;color:var(--t1);line-height:1}
+.brand-main span{color:var(--g)}
+.brand-by{font-family:var(--sans);font-size:9px;color:var(--t3);letter-spacing:1.5px;font-weight:500;margin-top:2px}
+.brand-by em{color:var(--g);font-style:normal;font-weight:600}
+.sub{display:none}
+.clock-wrap{text-align:right;flex-shrink:0;display:flex;flex-direction:column;gap:1px}
+.ist{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--t1)}
+.utc{font-size:10px;color:var(--t2);font-weight:500}
+.hdr-date{font-size:10px;color:var(--t2);font-weight:500}
+
+/* ─── CITY TABS ─── */
+.city-tabs{
+  display:flex;gap:0;
+  background:var(--bg2);
+  border-bottom:1px solid var(--b1);
+  overflow-x:auto;scrollbar-width:none;
+}
+.city-tabs::-webkit-scrollbar{display:none}
+.ctab{
+  flex:1;min-width:100px;
+  padding:11px 8px;
+  font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1.5px;
+  color:var(--t3);background:transparent;border:none;
+  border-bottom:2px solid transparent;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  position:relative;
+}
+.ctab:active{opacity:.7}
+.ctab.am{color:var(--milan);border-bottom-color:var(--milan);background:rgba(0,255,179,0.04)}
+.ctab.ap{color:var(--paris);border-bottom-color:var(--paris);background:rgba(123,143,255,0.04)}
+.ctab.al{color:var(--london);border-bottom-color:var(--london);background:rgba(255,179,71,0.04)}
+
+/* ─── MAIN CONTENT ─── */
+.app{padding:0}
+.panel{display:none}
+.panel.show{display:block}
+.panel-inner{padding:12px 14px;padding-bottom:calc(80px + var(--safe-bottom))}
+
+/* ─── CITY META CARD ─── */
+.city-meta{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:8px;
+  background:var(--bg2);border:1px solid var(--b1);
+  border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;
+}
+.cm-left{display:flex;flex-direction:column}
+.cm-iata{font-family:var(--sans);font-size:24px;font-weight:700;letter-spacing:3px;line-height:1}
+.cm-loc{font-size:8px;color:var(--t3);margin-top:3px;letter-spacing:.5px}
+.cm-center{text-align:center}
+.cm-ltime{font-family:var(--sans);font-size:20px;font-weight:600;line-height:1.1}
+.cm-tz{font-size:8px;color:var(--t3);margin-top:2px;letter-spacing:1px}
+.cm-date{font-size:8px;color:var(--t3);margin-top:3px;letter-spacing:.5px;font-family:var(--sans)}
+.cm-right{text-align:right}
+.cm-slotlbl{font-size:9px;font-weight:600;letter-spacing:1px}
+.cm-ist{font-size:8px;color:var(--t3);margin-top:3px}
+
+/* ─── SECTION HEADER ─── */
+.sec-hdr{
+  font-size:8px;color:var(--t3);letter-spacing:3px;
+  margin:14px 0 8px;display:flex;align-items:center;gap:8px;
+}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--b1)}
+.sec-hdr:first-of-type{margin-top:0}
+
+/* ─── MODE BAR ─── */
+.mode-bar{
+  display:flex;gap:6px;margin-bottom:12px;align-items:center;
+}
+.mbtn{
+  flex:1;padding:10px 6px;
+  font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1px;
+  border:1px solid var(--b2);background:var(--bg2);color:var(--t3);
+  cursor:pointer;border-radius:var(--radius-sm);transition:all .15s;
+  min-height:44px;
+}
+.mbtn:active{transform:scale(.97)}
+.mbtn.on.m8{background:var(--gbg);border-color:var(--g);color:var(--g)}
+.mbtn.on.m12{background:var(--abg);border-color:var(--a);color:var(--a)}
+.mbtn.on.mlive{background:var(--pbg);border-color:var(--p);color:var(--p)}
+.fbtn{
+  padding:10px 16px;min-height:44px;
+  font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:1px;
+  border:1px solid var(--g);background:var(--g);color:#001a0f;
+  cursor:pointer;border-radius:var(--radius-sm);transition:all .15s;white-space:nowrap;
+}
+.fbtn:active{transform:scale(.97);opacity:.85}
+.fbtn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ─── VAR TABS ─── */
+.vtabs{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.vtabs::-webkit-scrollbar{display:none}
+.vtab{
+  padding:8px 14px;min-height:36px;flex-shrink:0;
+  font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:1px;
+  border:1px solid var(--b1);background:var(--bg2);color:var(--t3);
+  cursor:pointer;border-radius:var(--radius-sm);transition:all .12s;
+}
+.vtab:active{opacity:.7}
+.vtab.on{background:var(--bg3);color:var(--t1);border-color:var(--b3)}
+
+/* ─── FORECAST TABLE ─── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--b1);border-radius:var(--radius);margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.tbl-wrap table{width:100%;border-collapse:collapse;min-width:340px}
+thead th{
+  font-size:9px;color:var(--t3);padding:8px 7px;text-align:center;
+  border-bottom:1px solid var(--b1);background:var(--bg2);
+  letter-spacing:.5px;white-space:nowrap;font-weight:500;font-family:var(--sans);
+  position:sticky;top:0;
+}
+thead th:first-child{text-align:left;padding-left:10px;min-width:78px;position:sticky;left:0;z-index:2;background:var(--bg2)}
+thead th.cur{border-bottom-width:2px;font-weight:700;color:var(--t1)}
+thead th.past-h{color:var(--t4)!important;background:rgba(0,0,0,.3)!important}
+tbody tr{border-bottom:1px solid rgba(30,38,64,0.6)}
+tbody tr:last-child{border-bottom:none}
+tbody tr.toprow td{background:rgba(255,255,255,0.014)}
+tbody td{padding:7px 7px;font-size:11px;text-align:center;color:var(--t1);white-space:nowrap;font-family:var(--mono)}
+tbody td:first-child{
+  text-align:left;font-size:9px;color:var(--t2);padding-left:10px;
+  font-family:var(--sans);font-weight:600;letter-spacing:.5px;
+  position:sticky;left:0;background:var(--bg);z-index:1;
+}
+tbody tr.toprow td:first-child{background:#0d1020}
+tbody td.topmod{font-weight:700}
+tbody td.na{color:var(--t4);font-size:9px}
+tbody td.past-v{color:#c8920a!important;font-style:italic}
+tbody tr.avgrow td{background:var(--bg3);font-size:10px;color:var(--t2);border-top:1px solid var(--b2)}
+tbody tr.avgrow td:first-child{color:var(--t3);font-size:8px;letter-spacing:2px;background:var(--bg3)}
+
+/* ─── MODEL UPDATES ─── */
+.model-updates{margin-bottom:12px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--radius);overflow:hidden}
+.mu-hdr{font-size:8px;color:var(--t3);letter-spacing:2px;padding:7px 12px;border-bottom:1px solid var(--b1);font-family:var(--sans)}
+.mu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.mu-item{padding:8px 12px;border-right:1px solid var(--b1);border-bottom:1px solid var(--b1)}
+.mu-label{font-size:8px;color:var(--t3);letter-spacing:1px;font-family:var(--sans);font-weight:600}
+.mu-time{font-size:10px;color:var(--t1);margin-top:3px;font-weight:500}
+.mu-age{font-size:8px;color:var(--t3);margin-top:2px}
+
+/* ─── MODEL PILLS ─── */
+.mbar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.mpill{font-size:8px;padding:3px 9px;border:1px solid var(--b2);border-radius:20px;color:var(--t3);font-family:var(--sans);font-weight:600}
+.mpill.top{font-weight:700}
+
+/* ─── METAR ─── */
+.metar-section{margin-bottom:12px}
+.metar-obs-list{display:flex;flex-direction:column;gap:4px}
+.metar-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--radius-sm);overflow:hidden;transition:border-color .15s}
+.metar-card.expanded{border-color:var(--b3)}
+.metar-hdr{
+  display:flex;align-items:center;gap:6px;
+  padding:11px 12px;cursor:pointer;user-select:none;
+  min-height:48px;
+}
+.metar-hdr:active{background:var(--bg3)}
+.m-badge{font-size:7px;padding:2px 6px;border-radius:4px;font-weight:700;flex-shrink:0;font-family:var(--sans);letter-spacing:.5px}
+.m-latest-chip{font-size:7px;padding:2px 6px;border-radius:4px;font-weight:700;flex-shrink:0;font-family:var(--sans)}
+.m-time-big{font-family:var(--sans);font-size:12px;font-weight:700;flex-shrink:0;color:var(--t1)}
+.m-summary{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0;align-items:center}
+.m-chip{font-size:9px;color:var(--t2);white-space:nowrap}
+.m-dot{font-size:8px;color:var(--t4)}
+.m-arr{font-size:12px;color:var(--t3);flex-shrink:0;transition:transform .2s;margin-left:4px}
+.m-arr.open{transform:rotate(180deg)}
+.metar-body{display:none;border-top:1px solid var(--b1)}
+.metar-body.show{display:block}
+
+/* METAR decode inside */
+.metar-raw-wrap{padding:10px 12px;background:var(--bg)}
+.metar-raw-label{font-size:7px;color:var(--t4);letter-spacing:2px;margin-bottom:5px;font-family:var(--sans)}
+.metar-raw-txt{font-size:10px;color:var(--t3);word-break:break-all;line-height:1.7;font-family:var(--mono)}
+.decode-wrap{padding:0 12px 12px}
+.decode-label{font-size:7px;color:var(--t3);letter-spacing:2px;margin:8px 0 6px;font-family:var(--sans)}
+.decode-fields{display:flex;flex-direction:column;gap:0;border:1px solid var(--b1);border-radius:var(--radius-sm);overflow:hidden}
+.df-row{display:grid;grid-template-columns:90px 1fr;border-bottom:1px solid rgba(30,38,64,0.5)}
+.df-row:last-child{border-bottom:none}
+.df-row:active{background:var(--bg3)}
+.df-key{
+  padding:8px 10px;font-size:8px;color:var(--t3);
+  font-family:var(--sans);font-weight:600;letter-spacing:.5px;
+  background:var(--bg2);border-right:1px solid var(--b1);
+  display:flex;align-items:flex-start;padding-top:9px;
+}
+.df-right{padding:8px 10px;display:flex;flex-direction:column;gap:3px}
+.df-val{font-size:11px;color:var(--g);font-weight:600;font-family:var(--mono)}
+.df-detail{font-size:9px;color:var(--t2);line-height:1.5}
+.df-raw{font-size:8px;color:var(--t4);font-family:var(--mono)}
+
+.metar-stub{padding:12px;font-size:10px;color:var(--t3);text-align:center}
+
+/* ─── LOW / HIGH PREDICTION BOX ─── */
+.lh-box{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+.lh-hdr{font-size:8px;color:var(--t3);letter-spacing:3px;padding:7px 13px;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px;font-family:var(--sans)}
+.lh-hdr .lh-mode-tag{font-size:7px;padding:2px 7px;border-radius:2px;font-weight:700;margin-left:6px}
+.lh-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.lh-cell{padding:14px 16px;border-right:1px solid var(--b1)}
+.lh-cell:last-child{border-right:none}
+.lh-label{font-size:7px;color:var(--t3);letter-spacing:3px;margin-bottom:8px;font-family:var(--sans)}
+.lh-val{font-size:32px;font-weight:700;letter-spacing:1px;line-height:1;font-family:var(--sans)}
+.lh-sub{font-size:8px;color:var(--t3);margin-top:6px;line-height:1.5;font-family:var(--sans)}
+.lh-metar-badge{font-size:8px;padding:2px 6px;border-radius:2px;background:var(--gbg);border:1px solid var(--gbr);color:var(--g);margin-left:5px}
+.lh-conf{display:inline-block;font-size:8px;padding:2px 8px;border-radius:2px;margin-top:6px;font-weight:600;letter-spacing:1px}
+.lh-na{font-size:11px;color:var(--t4);padding:16px;font-family:var(--sans)}
+@media(max-width:380px){.lh-val{font-size:26px}.lh-cell{padding:12px}}
+.metar-meta{font-size:8px;color:var(--t3);letter-spacing:1px;margin-bottom:8px;font-family:var(--sans)}
+
+/* ─── BOTTOM BAR ─── */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(6,8,16,0.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--b1);
+  padding:8px 14px;padding-bottom:calc(8px + var(--safe-bottom));
+  display:flex;align-items:center;gap:8px;
+}
+.bbtn{
+  flex:1;padding:9px 6px;min-height:42px;
+  font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.5px;
+  border:1px solid var(--b2);background:var(--bg2);color:var(--t2);
+  cursor:pointer;border-radius:var(--radius-sm);transition:all .12s;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.bbtn:active{opacity:.7;transform:scale(.97)}
+.bbtn.bcsv{border-color:var(--pbr);color:var(--p);background:var(--pbg)}
+.bbtn.bss{border-color:var(--abr);color:var(--a);background:var(--abg)}
+.ftime{font-size:8px;color:var(--t4);text-align:center;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px}
+
+/* ─── SCREENSHOT OVERLAY ─── */
+.ssov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:none;align-items:center;justify-content:center}
+.ssov.show{display:flex}
+.ssmsg{font-family:var(--sans);font-size:13px;color:var(--g);padding:20px 30px;background:var(--bg2);border:1px solid var(--gbr);border-radius:var(--radius);letter-spacing:1px}
+
+/* ─── LOADING DOTS ─── */
+@keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
+.dot{animation:blink 1.2s infinite}.dot:nth-child(2){animation-delay:.3s}.dot:nth-child(3){animation-delay:.6s}
+
+/* ─── STATUS INDICATOR ─── */
+.status-line{font-size:9px;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:6px;font-family:var(--sans)}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:var(--g)}
+.status-dot.err{background:var(--r)}
+.status-dot.partial{background:var(--a)}
+.status-dot.none{background:var(--t4)}
+
+/* ─── RESPONSIVE ─── */
+@media(min-width:600px){
+  .panel-inner{padding:16px 20px;padding-bottom:80px}
+  .city-meta{padding:14px 18px}
+  .cm-iata{font-size:28px}
+  .cm-ltime{font-size:26px}
+  .brand-main{font-size:19px}
+  .ist{font-size:17px}
+  .df-row{grid-template-columns:120px 1fr}
+  .mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+}
+@media(min-width:900px){
+  .panel-inner{padding:18px 24px;padding-bottom:80px;max-width:1100px;margin:0 auto}
+  .decode-fields{grid-template-columns:1fr}
+  .bottom-bar{max-width:1100px;left:50%;transform:translateX(-50%);border-radius:var(--radius) var(--radius) 0 0;border-left:1px solid var(--b1);border-right:1px solid var(--b1)}
+  .hdr{padding:12px 24px 10px}
+  .city-tabs{justify-content:center}
+  .ctab{flex:0 1 180px}
+}
+
+/* pull-to-refresh prevention */
+body{overscroll-behavior-y:contain}
+</style>
+</head>
+<body>
+<div class="ssov" id="ssov"><div class="ssmsg" id="ssmsg">capturing...</div></div>
+
+<!-- STICKY HEADER -->
+<div class="hdr">
+  <div class="brand-wrap">
+    <div class="brand-logo">
+      <div class="brand-icon">🌡️</div>
+      <div class="brand-text">
+        <div class="brand-main"><span>Temperature</span> Tool</div>
+        <div class="brand-by">by <em>NIKHIL</em></div>
+      </div>
+    </div>
+  </div>
+  <div class="clock-wrap">
+    <div class="ist" id="ist">IST TIME - --:--:--</div>
+    <div class="utc" id="utc">UTC TIME - --:--</div>
+    <div class="hdr-date" id="hdr-date">DATE - --/--/----</div>
+  </div>
+</div>
+
+<!-- CITY TABS -->
+<div class="city-tabs">
+  <button class="ctab am" onclick="setCity('milan',this)">LIMC · MALPENSA</button>
+  <button class="ctab" onclick="setCity('paris',this)">LFPB · LE BOURGET</button>
+  <button class="ctab" onclick="setCity('london',this)">EGLC · LONDON CITY</button>
+</div>
+
+<div class="app" id="app">
+  <div id="panel-milan" class="panel show"></div>
+  <div id="panel-paris" class="panel"></div>
+  <div id="panel-london" class="panel"></div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <button class="bbtn bcsv" onclick="exportCSV()">⬇ CSV</button>
+  <button class="bbtn bss" onclick="takeShot()">📸 PNG</button>
+  <div class="ftime" id="ftime">—</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const CITIES={
+  milan:{iata:'LIMC',name:'MALPENSA',loc:'45.6306°N 8.7281°E · Milano Malpensa',tz:'Europe/Rome',utcOff:2,lat:45.6306,lon:8.7281,cc:'milan',
+    models:[{label:'ICON-D2',ep:'dwd',mp:'icon_d2'},{label:'AROME-HD',ep:'mf',mp:'arome_france_hd'},{label:'ICON-EU',ep:'dwd',mp:'icon_eu'},{label:'AROME',ep:'mf',mp:'arome_france'}]},
+  paris:{iata:'LFPB',name:'LE BOURGET',loc:'48.9693°N 2.4411°E · Paris Le Bourget',tz:'Europe/Paris',utcOff:2,lat:48.9693,lon:2.4411,cc:'paris',
+    models:[{label:'AROME-HD',ep:'mf',mp:'arome_france_hd'},{label:'AROME',ep:'mf',mp:'arome_france'},{label:'ICON-D2',ep:'dwd',mp:'icon_d2'},{label:'ICON-EU',ep:'dwd',mp:'icon_eu'}]},
+  london:{iata:'EGLC',name:'LONDON CITY',loc:'51.5048°N 0.0553°E · London City Airport',tz:'Europe/London',utcOff:1,lat:51.5048,lon:0.0553,cc:'london',
+    models:[{label:'AROME-HD',ep:'mf',mp:'arome_france_hd'},{label:'AROME',ep:'mf',mp:'arome_france'},{label:'ICON-D2',ep:'dwd',mp:'icon_d2'},{label:'ICON-EU',ep:'dwd',mp:'icon_eu'}]}
+};
+const EP={dwd:'https://api.open-meteo.com/v1/dwd-icon',mf:'https://api.open-meteo.com/v1/meteofrance',forecast:'https://api.open-meteo.com/v1/forecast',geo:'https://api.open-meteo.com/v1/forecast'};
+const VARS=[
+  {key:'temp',label:'TEMPERATURE',src:'temperature_2m',unit:'°C',dec:1},
+  {key:'wspd',label:'WIND SPEED',src:'windspeed_10m',unit:'km/h',dec:0},
+  {key:'wdir',label:'WIND DIR',src:'winddirection_10m',unit:'°',dec:0},
+];
+
+let mode='8am',activeCity='milan',activeVar='temp';
+let allData={},metarData={},modelUpdateTimes={};
+
+// ═══════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════
+function tick(){
+  const n=new Date();
+  // Header — IST TIME / UTC TIME / DATE
+  const istTime=n.toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour12:false});
+  const utcTime=n.toLocaleTimeString('en-GB',{timeZone:'UTC',hour12:false,hour:'2-digit',minute:'2-digit'});
+  const dateStr=n.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'/');
+  document.getElementById('ist').textContent='IST TIME - '+istTime;
+  document.getElementById('utc').textContent='UTC TIME - '+utcTime;
+  document.getElementById('hdr-date').textContent='DATE - '+dateStr;
+  // City local time + date
+  Object.keys(CITIES).forEach(id=>{
+    const city=CITIES[id];
+    const ltEl=document.getElementById('ltime-'+id);
+    const ldEl=document.getElementById('ldate-'+id);
+    if(ltEl)ltEl.textContent=n.toLocaleTimeString('en-GB',{timeZone:city.tz,hour12:false,hour:'2-digit',minute:'2-digit'});
+    if(ldEl){
+      const localDate=new Date(n.toLocaleString('en-US',{timeZone:city.tz}));
+      const dd=String(localDate.getDate()).padStart(2,'0');
+      const mm=String(localDate.getMonth()+1).padStart(2,'0');
+      const yyyy=localDate.getFullYear();
+      ldEl.textContent=dd+'/'+mm+'/'+yyyy;
+    }
+  });
+}
+setInterval(tick,1000);tick();
+
+// ═══════════════════════════════════════════
+// METAR DECODE — ICAO Annex 3
+// ═══════════════════════════════════════════
+const WX_TABLE={'MI':'Shallow','PR':'Partial','BC':'Patches','DR':'Low Drifting','BL':'Blowing','SH':'Shower(s)','TS':'Thunderstorm','FZ':'Freezing','RA':'Rain','DZ':'Drizzle','SN':'Snow','SG':'Snow Grains','IC':'Ice Crystals','PL':'Ice Pellets','GR':'Hail','GS':'Small Hail','UP':'Unknown Precip','FG':'Fog','BR':'Mist','HZ':'Haze','FU':'Smoke','VA':'Volcanic Ash','DU':'Widespread Dust','SA':'Sand','PY':'Spray','SQ':'Squall','PO':'Dust/Sand Whirls','DS':'Duststorm','SS':'Sandstorm','FC':'Funnel Cloud/Tornado'};
+const CLOUD_COVER={FEW:'Few (1-2 oktas)',SCT:'Scattered (3-4 oktas)',BKN:'Broken (5-7 oktas)',OVC:'Overcast (8 oktas)',VV:'Vertical Visibility'};
+const TREND_CODES={NOSIG:'No significant change',BECMG:'Becoming',TEMPO:'Temporary fluctuation'};
+
+function decodeWxCode(code){
+  let s=code,intensity='',descriptor='',precip=[],obscur='',other='';
+  if(s.startsWith('-')){intensity='Light';s=s.slice(1);}
+  else if(s.startsWith('+')){intensity='Heavy';s=s.slice(1);}
+  else if(s.startsWith('VC')){intensity='In vicinity';s=s.slice(2);}
+  const descs=['MI','PR','BC','DR','BL','SH','TS','FZ'];
+  for(const d of descs){if(s.startsWith(d)){descriptor=WX_TABLE[d]||d;s=s.slice(2);break;}}
+  const precips=['RA','DZ','SN','SG','IC','PL','GR','GS','UP'];
+  while(s.length>=2){const p=s.slice(0,2);if(precips.includes(p)){precip.push(WX_TABLE[p]||p);s=s.slice(2);}else break;}
+  if(s.length>=2){const o=s.slice(0,2);if(WX_TABLE[o]){obscur=WX_TABLE[o];s=s.slice(2);}}
+  const others=['SQ','PO','DS','SS','FC'];
+  if(s.length>=2&&others.includes(s.slice(0,2))){other=WX_TABLE[s.slice(0,2)]||s.slice(0,2);}
+  return[intensity,descriptor,...precip,obscur,other].filter(Boolean).join(' ')||code;
+}
+
+function dirLabel(deg){
+  if(deg===null||deg===undefined)return'VRB';
+  return['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(deg/22.5)%16];
+}
+
+function parseMetarLine(raw){
+  if(!raw||(!raw.startsWith('METAR')&&!raw.startsWith('SPECI')))return null;
+  const r={raw,fields:{}};
+  r.type=raw.startsWith('SPECI')?'SPECI':'METAR';
+  r.fields.type={label:'Report Type',value:r.type,detail:r.type==='SPECI'?'Special observation — significant change occurred':'Routine scheduled observation',raw:r.type};
+  const stm=raw.match(/^(?:METAR|SPECI)\s+(?:COR\s+)?([A-Z]{4})\b/);
+  if(stm){r.station=stm[1];r.fields.station={label:'Station',value:stm[1],detail:'ICAO 4-letter aerodrome identifier',raw:stm[1]};}
+  r.cor=/ COR /.test(raw);
+  if(r.cor)r.fields.cor={label:'Correction',value:'COR',detail:'Corrected report — replaces previous erroneous observation',raw:'COR'};
+  r.auto=/ AUTO /.test(raw);
+  if(r.auto)r.fields.auto={label:'Auto Station',value:'AUTO',detail:'Fully automated station, no human observer present',raw:'AUTO'};
+  const dm=raw.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
+  if(dm){r.day=parseInt(dm[1]);r.hour=parseInt(dm[2]);r.min=parseInt(dm[3]);r.timeStr=dm[2]+':'+dm[3]+'Z';
+    r.fields.time={label:'Obs Time',value:dm[2]+':'+dm[3]+'Z',detail:`Day ${dm[1]} of month\n${dm[2]}:${dm[3]} UTC (Zulu time)`,raw:dm[0]};}
+  const wm=raw.match(/\b(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?(KT|MPS)\b/);
+  if(wm){
+    r.vrb=wm[1]==='VRB';r.wdir=r.vrb?null:parseInt(wm[1]);
+    const unit=wm[5];const spd=parseInt(wm[2]);const gst=wm[4]?parseInt(wm[4]):null;
+    r.wspdKt=unit==='MPS'?Math.round(spd*1.944):spd;
+    r.wgstKt=gst?(unit==='MPS'?Math.round(gst*1.944):gst):null;
+    r.wspd=Math.round(r.wspdKt*1.852);r.wgst=r.wgstKt?Math.round(r.wgstKt*1.852):null;
+    const bft=r.wspdKt<=1?0:r.wspdKt<=3?1:r.wspdKt<=6?2:r.wspdKt<=10?3:r.wspdKt<=16?4:r.wspdKt<=21?5:r.wspdKt<=27?6:r.wspdKt<=33?7:r.wspdKt<=40?8:r.wspdKt<=47?9:r.wspdKt<=55?10:r.wspdKt<=63?11:12;
+    const bftDesc=['Calm','Light air','Light breeze','Gentle breeze','Moderate breeze','Fresh breeze','Strong breeze','Near gale','Gale','Severe gale','Storm','Violent storm','Hurricane'][bft];
+    const wval=(r.vrb?'Variable':dirLabel(r.wdir)+' '+r.wdir+'°')+' · '+r.wspd+'km/h ('+r.wspdKt+'kt)'+(r.wgst?' · Gust '+r.wgst+'km/h':'');
+    r.fields.wind={label:'Wind',value:wval,detail:`Direction: ${r.vrb?'Variable (VRB)':dirLabel(r.wdir)+' — '+r.wdir+'°'}\nSpeed: ${r.wspdKt}kt = ${r.wspd}km/h${r.wgst?'\nGust: '+r.wgstKt+'kt = '+r.wgst+'km/h':''}\nBeaufort ${bft}: ${bftDesc}`,raw:wm[0]};}
+  const wv=raw.match(/\b(\d{3})V(\d{3})\b/);
+  if(wv){r.wvar={from:parseInt(wv[1]),to:parseInt(wv[2])};r.fields.wvar={label:'Wind Var',value:dirLabel(wv[1])+'–'+dirLabel(wv[2]),detail:`Wind direction varying between\n${wv[1]}° (${dirLabel(wv[1])}) and ${wv[2]}° (${dirLabel(wv[2])})`,raw:wv[0]};}
+  const vm=raw.match(/(?<![\/\d])(\d{4})(?!\d)(?!.*Q\d{4})/);
+  if(vm){const v=parseInt(vm[1]);if(v>=0&&v<=9999){r.vis=v;
+    const cat=v<200?'RVR only (below Cat III)':v<800?'Cat III ILS':v<1500?'Cat II ILS':v<3000?'Cat I ILS':v<5000?'Marginal VFR':'VFR';
+    r.fields.vis={label:'Visibility',value:v===9999?'≥10km (CAVOK-like)':v+'m',detail:`Prevailing visibility: ${v===9999?'10km or more':v+'m'}\nFlight category: ${cat}`,raw:vm[0]};}}
+  const vsm=raw.match(/\b(\d+(?:\/\d+)?|\d+\s+\d+\/\d+)SM\b/);
+  if(vsm&&!r.vis){r.visSM=vsm[0];r.fields.vis={label:'Visibility',value:vsm[0],detail:`US statute miles format: ${vsm[1]} SM`,raw:vsm[0]};}
+  r.cavok=/\bCAVOK\b/.test(raw);
+  if(r.cavok){r.fields.cavok={label:'CAVOK',value:'CAVOK ✓',detail:'Ceiling And Visibility OK:\n• Visibility ≥10km\n• No cloud below 5000ft / MSA\n• No CB or TCU\n• No significant weather',raw:'CAVOK'};}
+  const rvr=raw.match(/\bR(\d{2}[LRC]?)\/([PM]?\d{4})(V([PM]?\d{4}))?FT\b/);
+  if(rvr){r.fields.rvr={label:'RVR',value:'Rwy '+rvr[1]+': '+rvr[2]+(rvr[3]||'')+'ft',detail:`Runway Visual Range\nRunway: ${rvr[1]}\nRVR: ${rvr[2]}ft${rvr[4]?' variable to '+rvr[4]+'ft':''}`,raw:rvr[0]};}
+  const wxTokens=raw.replace(/^.*?Z\s/,'').match(/\b[-+]?(?:VC)?(?:MI|PR|BC|DR|BL|SH|TS|FZ)?(?:RA|DZ|SN|SG|IC|PL|GR|GS|UP|FG|BR|HZ|FU|VA|DU|SA|PY|SQ|PO|DS|SS|FC)+\b/g)||[];
+  r.wx=wxTokens.map(t=>decodeWxCode(t));r.wxRaw=wxTokens;
+  if(r.wxRaw.length)r.fields.wx={label:'Weather',value:r.wx.join(' · '),detail:r.wxRaw.map((t,i)=>`${t} → ${r.wx[i]}`).join('\n'),raw:r.wxRaw.join(' ')};
+  const clouds=[];const cre=/\b(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?\b/g;let cm;
+  while((cm=cre.exec(raw))!==null){
+    const baseFt=cm[2]?parseInt(cm[2])*100:null;
+    const baseM=baseFt?Math.round(baseFt*0.3048):null;
+    clouds.push({cover:cm[1],baseFt,baseM,cb:cm[3]||null});
+  }
+  r.clouds=clouds;r.clearAbove=/ NCD\b| NSC\b/.test(raw);
+  if(clouds.length){
+    r.fields.clouds={label:'Clouds',value:clouds.map(c=>c.cover+(c.baseFt?'@'+c.baseFt+'ft':'')).join(' '),
+      detail:clouds.map(c=>`${CLOUD_COVER[c.cover]||c.cover}\nat ${c.baseFt?c.baseFt+'ft ('+c.baseM+'m AGL)':'unknown height'}${c.cb?' — '+c.cb+' (convective!)':''}${(c.cover==='BKN'||c.cover==='OVC')?' ← CEILING':''}`).join('\n\n'),
+      raw:clouds.map(c=>c.cover+(c.baseFt?String(parseInt(c.baseFt/100)).padStart(3,'0'):'///')+(c.cb||'')).join(' ')};}
+  else if(r.clearAbove){r.fields.clouds={label:'Clouds',value:'NCD / NSC',detail:'No Cloud Detected or No Significant Cloud\nbelow 5000ft or MSA whichever is higher',raw:'NCD/NSC'};}
+  const tm=raw.match(/\s(M?\d{1,2})\/(M?\d{1,2})\s/);
+  if(tm){
+    r.temp=parseInt(tm[1].replace('M','-'));r.dew=parseInt(tm[2].replace('M','-'));
+    const rh=Math.round(100*Math.exp(17.625*r.dew/(243.04+r.dew))/Math.exp(17.625*r.temp/(243.04+r.temp)));
+    const wb=r.temp*Math.atan(0.151977*Math.sqrt(rh+8.313659))+Math.atan(r.temp+rh)-Math.atan(rh-1.676331)+0.00391838*Math.pow(rh,1.5)*Math.atan(0.023101*rh)-4.686035;
+    const spread=r.temp-r.dew;
+    r.rh=rh;
+    r.fields.temp={label:'Temp / Dew',value:r.temp+'°C / '+r.dew+'°C',
+      detail:`Temperature: ${r.temp}°C\nDew Point: ${r.dew}°C\nRelative Humidity: ~${rh}%\nWet Bulb: ~${wb.toFixed(1)}°C\nT-Td Spread: ${spread}°C${spread<3?' ⚠ Fog risk likely':''}`,raw:tm[0].trim()};}
+  const qm=raw.match(/\bQ(\d{4})\b/);
+  if(qm){r.qnh=parseInt(qm[1]);
+    const dev=r.qnh-1013.25;
+    r.fields.qnh={label:'QNH',value:r.qnh+' hPa',detail:`QNH (altimeter setting): ${r.qnh} hPa\nDeviation from std (1013.25): ${dev>0?'+':''}${dev.toFixed(1)} hPa\n${r.qnh<990?'⚠ Very low — strong cyclone':r.qnh<1000?'Low pressure':''}${r.qnh>1030?'High pressure — stable air':''}`,raw:qm[0]};}
+  const am=raw.match(/\bA(\d{4})\b/);
+  if(am&&!r.qnh){r.altIn=(parseInt(am[1])/100).toFixed(2);const hpa=(parseFloat(r.altIn)*33.8639).toFixed(1);r.fields.qnh={label:'Altimeter',value:r.altIn+'"Hg ('+hpa+' hPa)',detail:`US altimeter setting: ${r.altIn} inHg\n= ${hpa} hPa equivalent`,raw:am[0]};}
+  const trem=raw.match(/\b(NOSIG|BECMG|TEMPO)\b(.*?)(?=$)/);
+  if(trem){r.fields.trend={label:'Trend',value:trem[1],detail:`${TREND_CODES[trem[1]]||trem[1]}${trem[2]?' — '+trem[2].trim():''}`,raw:trem[0].trim()};}
+  return r;
+}
+
+function cloudSummary(m){
+  if(m.cavok)return'CAVOK';
+  if(m.clearAbove)return'Clear';
+  if(!m.clouds||!m.clouds.length)return'—';
+  return m.clouds.map(c=>c.cover+(c.baseFt?'@'+c.baseFt+'ft':'')).join(' ');
+}
+
+async function fetchMetar(icao){
+  const awUrl=`https://aviationweather.gov/api/data/metar?ids=${icao}&hours=24&sep=true`;
+  const proxies=[
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(awUrl)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(awUrl)}`,
+    `https://proxy.cors.sh/${awUrl}`,
+  ];
+  let txt='';
+  for(const p of proxies){
+    try{const r=await fetch(p);if(r.ok){txt=await r.text();if(txt&&txt.includes('METAR'))break;}}catch(e){continue;}
+  }
+  if(!txt||!txt.includes('METAR'))throw new Error('All proxies failed');
+  return txt.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('METAR')||l.startsWith('SPECI')).map(parseMetarLine).filter(Boolean);
+}
+
+// ═══════════════════════════════════════════
+// METAR RENDER
+// ═══════════════════════════════════════════
+function toggleMetar(cid,idx){
+  const body=document.getElementById(`mbody-${cid}-${idx}`);
+  const arr=document.getElementById(`marr-${cid}-${idx}`);
+  const card=document.getElementById(`mcard-${cid}-${idx}`);
+  if(!body)return;
+  const open=body.classList.toggle('show');
+  if(arr)arr.classList.toggle('open',open);
+  if(card)card.classList.toggle('expanded',open);
+}
+
+function renderMetarCard(m,idx,cid,cc,isLatest){
+  const windStr=m.fields&&m.fields.wind?m.fields.wind.value:(m.vrb?`VRB ${m.wspd||'—'}km/h`:`${dirLabel(m.wdir)} ${m.wdir||'?'}° ${m.wspd||'—'}km/h`);
+  const visStr=m.cavok?'CAVOK':(m.vis?(m.vis===9999?'≥10km':m.vis+'m'):(m.visSM||'—'));
+  const tempStr=m.temp!==undefined?m.temp+'°C':'—';
+  const wxStr=m.wx&&m.wx.length?m.wx.join(' · '):'';
+  const cldStr=cloudSummary(m);
+  const isMETAR=m.type!=='SPECI';
+  const badgeStyle=!isMETAR?'background:var(--abg);color:var(--a);border:1px solid var(--abr)':'background:var(--gbg);color:var(--g);border:1px solid var(--gbr)';
+  const fieldOrder=['type','cor','auto','time','wind','wvar','vis','cavok','rvr','wx','clouds','temp','qnh','trend'];
+  let detailRows='';
+  for(const fk of fieldOrder){
+    const f=m.fields&&m.fields[fk];if(!f)continue;
+    const detail=f.detail?f.detail.replace(/\n/g,'<br>'):'';
+    detailRows+=`<div class="df-row">
+      <div class="df-key">${f.label}</div>
+      <div class="df-right">
+        <div class="df-val">${f.value}</div>
+        ${detail?`<div class="df-detail">${detail}</div>`:''}
+        ${f.raw&&f.raw!==f.value?`<div class="df-raw">raw: ${f.raw}</div>`:''}
+      </div>
+    </div>`;
+  }
+  const rawClean=m.raw.replace(/^(METAR|SPECI)\s+/,'');
+  const bodyOpen=isLatest?' show':'';
+  const cardClass=isLatest?' expanded':'';
+  return`<div class="metar-card${cardClass}" id="mcard-${cid}-${idx}">
+    <div class="metar-hdr" onclick="toggleMetar('${cid}',${idx})">
+      <span class="m-badge" style="${badgeStyle}">${m.type||'METAR'}</span>
+      ${isLatest?`<span class="m-latest-chip" style="background:${cc};color:#000">LATEST</span>`:''}
+      <span class="m-time-big">${m.timeStr||'—'}</span>
+      <div class="m-summary">
+        <span class="m-chip">${tempStr}</span>
+        <span class="m-dot">·</span>
+        <span class="m-chip">${windStr.split('·')[0].trim()}</span>
+        <span class="m-dot">·</span>
+        <span class="m-chip">${visStr}</span>
+        ${wxStr?`<span class="m-dot">·</span><span class="m-chip" style="color:var(--a)">${wxStr}</span>`:''}
+        ${!wxStr&&cldStr!=='—'?`<span class="m-dot">·</span><span class="m-chip">${cldStr}</span>`:''}
+      </div>
+      <span class="m-arr${isLatest?' open':''}" id="marr-${cid}-${idx}">▾</span>
+    </div>
+    <div class="metar-body${bodyOpen}" id="mbody-${cid}-${idx}">
+      <div class="metar-raw-wrap">
+        <div class="metar-raw-label">RAW METAR</div>
+        <div class="metar-raw-txt">${rawClean}</div>
+      </div>
+      <div class="decode-wrap">
+        <div class="decode-label">ICAO DECODE · Annex 3 / WMO No.49</div>
+        <div class="decode-fields">${detailRows}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMetar(cid){
+  const wrap=document.getElementById('mwrap-'+cid);if(!wrap)return;
+  const data=metarData[cid];const city=CITIES[cid];const cc=`var(--${city.cc})`;
+  if(!data){wrap.innerHTML=`<div class="metar-card"><div class="metar-stub">Loading<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div></div>`;return;}
+  if(data.err){wrap.innerHTML=`<div class="metar-card"><div class="metar-stub" style="color:var(--r)">⚠ ${data.err}</div></div>`;return;}
+  if(!data.length){wrap.innerHTML=`<div class="metar-card"><div class="metar-stub">No data received</div></div>`;return;}
+  let html=`<div class="metar-meta">${data.length} observations · ${city.iata} · aviationweather.gov · Tap to expand full ICAO decode</div>`;
+  html+=`<div class="metar-obs-list">`;
+  data.forEach((m,i)=>{html+=renderMetarCard(m,i,cid,cc,i===0);});
+  html+=`</div>`;
+  wrap.innerHTML=html;
+  // Update prediction when METAR loads (observed low may update)
+  renderLowHigh(cid);
+}
+
+// ═══════════════════════════════════════════
+// HOUR SLOTS
+// ═══════════════════════════════════════════
+function getHourSlots(cid){
+  const city=CITIES[cid];
+  const nowLocal=parseInt(new Date().toLocaleTimeString('en-GB',{timeZone:city.tz,hour12:false,hour:'2-digit'}));
+  if(mode==='live'){
+    const slots=[];
+    for(let i=0;i<49;i++){const h=(nowLocal+i)%24;const day=Math.floor((nowLocal+i)/24);slots.push({localH:h,day,past:false,label:`${String(h).padStart(2,'0')}${day>0?'+'+day+'d':''}`});}
+    return slots;
+  }
+  const startH=mode==='8am'?0:4;const slots=[];
+  for(let h=startH;h<=20;h++)slots.push({localH:h,day:0,past:h<nowLocal,label:`${String(h).padStart(2,'0')}:00`});
+  return slots;
+}
+
+function slotDesc(cid){
+  if(mode==='live')return'LIVE → +48H';
+  const city=CITIES[cid];const s=mode==='8am'?'00:00':'04:00';
+  const ist=mode==='8am'?`IST ${String(((0-city.utcOff+5+48)%24)).padStart(2,'0')}:30`:`IST ${String(((4-city.utcOff+5+48)%24)).padStart(2,'0')}:30`;
+  return`${s}→20:00 LOCAL · ${ist}`;
+}
+
+// ═══════════════════════════════════════════
+// VALUE UTILS
+// ═══════════════════════════════════════════
+function getVal(hourly,src,localH,utcOff,day){
+  if(!hourly||!hourly.time)return null;
+  // utcH: local hour converted to UTC
+  const utcH=((localH-utcOff)+48)%24;
+  // dayShift: if local hour < utcOff, we've crossed into prev UTC day
+  const dayShift=localH<utcOff?-1:0;
+  // UTC date to look for
+  const now=new Date();
+  const utcBase=new Date(Date.UTC(
+    now.getUTCFullYear(),now.getUTCMonth(),
+    now.getUTCDate()+(day||0)+dayShift
+  ));
+  // Try exact date first, then ±1,±2 days as fallback
+  const datesToTry=[0,-1,1,-2,2].map(sh=>{
+    const dd=new Date(Date.UTC(utcBase.getUTCFullYear(),utcBase.getUTCMonth(),utcBase.getUTCDate()+sh));
+    return dd.toISOString().split('T')[0];
+  });
+  let idx=-1;
+  for(const dateStr of datesToTry){
+    idx=hourly.time.findIndex(t=>t.startsWith(dateStr)&&parseInt(t.slice(11,13))===utcH);
+    if(idx!==-1)break;
+  }
+  if(idx===-1)return null;
+  const arr=hourly[src];
+  if(!arr||arr[idx]===undefined||arr[idx]===null)return null;
+  return arr[idx];
+}
+function fmtVal(raw,v){
+  if(raw===null)return null;
+  if(v.key==='wdir'){const d=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return d[Math.round(raw/22.5)%16]+' '+Math.round(raw)+'°';}
+  return raw.toFixed(v.dec)+v.unit;
+}
+
+// ═══════════════════════════════════════════
+// MODEL UPDATES
+// ═══════════════════════════════════════════
+function renderModelUpdates(cid){
+  const el=document.getElementById('mupdates-'+cid);if(!el)return;
+  const city=CITIES[cid];const d=modelUpdateTimes[cid]||{};
+  el.innerHTML=city.models.map(m=>{
+    const t=d[m.label];
+    if(!t)return`<div class="mu-item"><div class="mu-label">${m.label}</div><div class="mu-time" style="color:var(--t3)">—</div></div>`;
+    const dt=new Date(t+'Z');
+    const utcHHMM=dt.toISOString().slice(11,16);
+    const istH=String((dt.getUTCHours()+5)%24+(dt.getUTCMinutes()+30>=60?1:0)).padStart(2,'0');
+    const istM=String((dt.getUTCMinutes()+30)%60).padStart(2,'0');
+    const nowMs=Date.now();const ageMs=nowMs-dt.getTime();
+    const ageH=Math.floor(ageMs/3600000);const ageM=Math.floor((ageMs%3600000)/60000);
+    const ageStr=ageH>0?`${ageH}h ${ageM}m ago`:`${ageM}m ago`;
+    return`<div class="mu-item"><div class="mu-label">${m.label}</div><div class="mu-time">${utcHHMM} UTC (${istH}:${istM} IST)</div><div class="mu-age">${ageStr}</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// FORECAST TABLE
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// LOW / HIGH PREDICTION ENGINE — exact PC version
+// ═══════════════════════════════════════════
+function renderLowHigh(cid){
+  const el=document.getElementById('lhbox-'+cid);if(!el)return;
+  const city=CITIES[cid];
+  const d=allData[cid]||{};
+  const ok=Object.values(d).filter(x=>x!==null).length;
+  if(!ok){el.innerHTML=`<div class="lh-box"><div class="lh-na">▶ Fetch karo pehle</div></div>`;return;}
+
+  // Only show for 8am and 12pm modes (not live)
+  if(mode==='live'){el.innerHTML=`<div class="lh-box"><div class="lh-na" style="color:var(--t3)">Live mode mein N/A — 08:00 ya 12:00 mode use karo</div></div>`;return;}
+
+  const cc=`var(--${city.cc})`;
+  const modeTag=mode==='8am'
+    ?`<span class="lh-mode-tag" style="background:var(--gbg);border:1px solid var(--gbr);color:var(--g)">08:00 MODE</span>`
+    :`<span class="lh-mode-tag" style="background:var(--abg);border:1px solid var(--abr);color:var(--a)">12:00 MODE</span>`;
+
+  // ── LOW calculation — METAR ONLY ──
+  // 8am mode: lowest METAR temp from 00:00–08:00 LOCAL time
+  // 12pm mode: lowest METAR temp from 00:00–12:00 LOCAL time
+  const lowEndH = mode==='8am' ? 8 : 12;
+  const todayDD = new Date().getUTCDate();
+
+  let metarLow=null, metarLowTime='';
+  const metarArr=metarData[cid];
+  if(Array.isArray(metarArr)){
+    metarArr.forEach(m=>{
+      if(!m||m.temp===undefined||m.temp===null)return;
+      if(m.day!==todayDD)return;
+      // m.hour is UTC — convert to local: localH = (utcHour + utcOff) % 24
+      const localH=(m.hour + city.utcOff + 24) % 24;
+      // We want METARs from local 00:00 up to lowEndH
+      // Edge case: if localH > 20 it's previous day's late evening, skip
+      if(localH <= lowEndH && localH >= 0){
+        if(metarLow===null || m.temp < metarLow){
+          metarLow = m.temp;
+          metarLowTime = m.timeStr||'';
+        }
+      }
+    });
+  }
+
+  // Final LOW: METAR only — if no METAR data yet, show waiting message
+  let lowVal=null, lowSrc='';
+  if(metarLow!==null){
+    lowVal = metarLow;
+    lowSrc = `METAR observed${metarLowTime?' · '+metarLowTime:''}`;
+  }
+
+  // ── HIGH calculation ──
+  // For both modes: scan 08:00 to 17:00 (peak heat window)
+  // Use weighted avg: models that agree closely get more weight (lower spread = higher conf)
+  const highStartH=mode==='8am'?8:12;
+  const highEndH=18;
+  const modelPeaks=[];
+  city.models.forEach((m,mi)=>{
+    const hourly=d[mi];if(!hourly)return;
+    const peaks=[];
+    for(let h=highStartH;h<=highEndH;h++){
+      const v=getVal(hourly,'temperature_2m',h,city.utcOff,0);
+      if(v!==null)peaks.push(v);
+    }
+    if(peaks.length)modelPeaks.push(Math.max(...peaks));
+  });
+
+  let highVal=null,highSrc='',highConf='',confStyle='';
+  if(modelPeaks.length){
+    const avg=modelPeaks.reduce((a,b)=>a+b,0)/modelPeaks.length;
+    const mx=Math.max(...modelPeaks);
+    const mn=Math.min(...modelPeaks);
+    const spread=mx-mn;
+    // trim outliers: remove values > 1.5*IQR from median for better estimate
+    const sorted=[...modelPeaks].sort((a,b)=>a-b);
+    const q1=sorted[Math.floor(sorted.length*0.25)];
+    const q3=sorted[Math.ceil(sorted.length*0.75)-1]||sorted[sorted.length-1];
+    const iqr=q3-q1;
+    const filtered=modelPeaks.filter(v=>v>=q1-1.5*iqr&&v<=q3+1.5*iqr);
+    const filtAvg=filtered.length?filtered.reduce((a,b)=>a+b,0)/filtered.length:avg;
+    // blend: 70% filtered avg + 30% simple avg (slight upward bias for high)
+    highVal=filtAvg*0.7+avg*0.3;
+    highSrc=`${modelPeaks.length} model${modelPeaks.length>1?'s':''} · range ${mn.toFixed(1)}–${mx.toFixed(1)}°C`;
+    // Confidence based on spread
+    if(spread<=1.0){highConf='HIGH';confStyle='background:var(--gbg);border:1px solid var(--gbr);color:var(--g)';}
+    else if(spread<=2.5){highConf='MED';confStyle='background:var(--abg);border:1px solid var(--abr);color:var(--a)';}
+    else{highConf='LOW';confStyle='background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.3);color:var(--r)';}
+  }
+
+  // ── Render ──
+  const lowCC=mode==='8am'?'var(--p)':'var(--g)';
+
+  el.innerHTML=`<div class="lh-box">
+    <div class="lh-hdr">TODAY'S TEMPERATURE ESTIMATE${modeTag}</div>
+    <div class="lh-grid">
+      <div class="lh-cell">
+        <div class="lh-label">${mode==='8am'?'FORECAST LOW · 00:00–08:00':'OBSERVED LOW · till 12:00'}</div>
+        ${lowVal!==null
+          ?`<div class="lh-val" style="color:${lowCC}">${lowVal.toFixed(1)}<span class="lh-unit">°C</span></div>
+             <div class="lh-sub">${lowSrc}<span class="lh-metar-badge">METAR ✓</span></div>
+             <span class="lh-conf" style="background:var(--gbg);border:1px solid var(--gbr);color:var(--g)">OBSERVED</span>`
+          :`<div class="lh-na" style="color:var(--t3)">METAR data nahi mila abhi</div>`}
+      </div>
+      <div class="lh-cell">
+        <div class="lh-label">FORECAST HIGH · ${highStartH}:00–18:00</div>
+        ${highVal!==null
+          ?`<div class="lh-val" style="color:var(--a)">${highVal.toFixed(1)}<span class="lh-unit">°C</span></div>
+             <div class="lh-sub">${highSrc}</div>
+             ${highConf?`<span class="lh-conf" style="${confStyle}">CONF: ${highConf}</span>`:''}`
+          :`<div class="lh-na">Data nahi mila</div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderForecast(cid){
+  const el=document.getElementById('ftbl-'+cid);if(!el)return;
+  const city=CITIES[cid];
+  const d=allData[cid]||{};
+  const slots=getHourSlots(cid);const v=VARS.find(x=>x.key===activeVar)||VARS[0];
+  const ok=Object.values(d).filter(x=>x!==null).length;const total=city.models.length;
+  const nowH=parseInt(new Date().toLocaleTimeString('en-GB',{timeZone:city.tz,hour12:false,hour:'2-digit'}));
+  const cc=`var(--${city.cc})`;
+  const dotClass=ok===total?'ok':ok===0?'none':'partial';
+  const statusTxt=ok===0?'Not fetched — tap FETCH ALL':''+ok+'/'+total+' models loaded';
+
+  const hdrCells=slots.map(s=>{
+    const isCur=s.localH===nowH&&s.day===0;
+    return`<th class="${isCur?'cur':''} ${s.past?'past-h':''}" style="${isCur?`color:${cc};border-bottom-color:${cc}`:''}">${s.label}</th>`;
+  }).join('');
+
+  let tbl=`<div class="tbl-wrap"><table><thead><tr><th>MODEL</th>${hdrCells}</tr></thead><tbody>`;
+  const conV=slots.map(()=>[]);
+  city.models.forEach((m,mi)=>{
+    const hourly=d[mi]||null;const top=mi===0;
+    tbl+=`<tr class="${top?'toprow':''}"><td class="${top?'topmod':''}" style="${top?`color:${cc}`:''}">${m.label}</td>`;
+    slots.forEach((s,si)=>{
+      const raw=hourly?getVal(hourly,v.src,s.localH,city.utcOff,s.day):null;
+      if(raw!==null&&!s.past)conV[si].push(raw);
+      const txt=raw!==null?fmtVal(raw,v):null;
+      const isCur=s.localH===nowH&&s.day===0;
+      tbl+=`<td class="${isCur?'cur':''} ${s.past?'past-v':''}${txt===null?' na':''}">${txt!==null?txt:'—'}</td>`;
+    });tbl+=`</tr>`;
+  });
+  tbl+=`<tr class="avgrow"><td>AVG</td>`;
+  slots.forEach((s,si)=>{
+    if(s.past){tbl+=`<td class="past-v">—</td>`;return;}
+    const vals=conV[si];if(!vals.length){tbl+=`<td>—</td>`;return;}
+    if(v.key==='wdir'){
+      const sA=vals.reduce((x,a)=>x+Math.sin(a*Math.PI/180),0)/vals.length;
+      const cA=vals.reduce((x,a)=>x+Math.cos(a*Math.PI/180),0)/vals.length;
+      const avg=(Math.atan2(sA,cA)*180/Math.PI+360)%360;
+      const d=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+      tbl+=`<td>${d[Math.round(avg/22.5)%16]} ${Math.round(avg)}°</td>`;
+    }else tbl+=`<td>${(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(v.dec)}${v.unit}</td>`;
+  });tbl+=`</tr>`;
+  if(v.key!=='wdir'){
+    tbl+=`<tr class="avgrow"><td>RANGE</td>`;
+    slots.forEach((s,si)=>{
+      if(s.past){tbl+=`<td class="past-v">—</td>`;return;}
+      const vals=conV[si];if(vals.length<2){tbl+=`<td>—</td>`;return;}
+      tbl+=`<td>${Math.min(...vals).toFixed(v.dec)}–${Math.max(...vals).toFixed(v.dec)}</td>`;
+    });tbl+=`</tr>`;
+  }
+  tbl+=`</tbody></table></div>`;
+
+  el.innerHTML=`
+    <div class="status-line"><div class="status-dot ${dotClass}"></div>${statusTxt} · ${slotDesc(cid)}</div>
+    <div class="vtabs">${VARS.map(vt=>`<button class="vtab ${vt.key===activeVar?'on':''}" onclick="setVar('${vt.key}','${cid}')">${vt.label}</button>`).join('')}</div>
+    ${tbl}`;
+  renderModelUpdates(cid);
+  renderLowHigh(cid);
+}
+
+// ═══════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════
+async function fetchModel(city,model){
+  const varList=VARS.map(v=>v.src).join(',');
+  const base=EP[model.ep];const days=3;const pastH=48;
+  const url=`${base}?latitude=${city.lat}&longitude=${city.lon}&hourly=${varList}&timezone=UTC&forecast_days=${days}&past_hours=${pastH}&models=${model.mp}`;
+  const r=await fetch(url);
+  if(!r.ok)throw new Error(`HTTP ${r.status}`);
+  const j=await r.json();
+  if(j.error)throw new Error(j.reason||'API error');
+  if(!j.hourly||!j.hourly.time)throw new Error('No hourly data');
+  return j;
+}
+
+async function fetchAll(){
+  const btn=document.getElementById('fbtn');
+  btn.disabled=true;btn.textContent='⟳ FETCHING...';
+  allData={};metarData={};modelUpdateTimes={};
+  renderAll();
+  await Promise.all([
+    ...Object.entries(CITIES).map(async([id,city])=>{
+      try{metarData[id]=await fetchMetar(city.iata);}
+      catch(e){metarData[id]={err:e.message};}
+      renderMetar(id);
+    }),
+    ...Object.entries(CITIES).map(async([id,city])=>{
+      allData[id]={};modelUpdateTimes[id]={};
+      await Promise.all(city.models.map(async(m,i)=>{
+        try{
+          const j=await fetchModel(city,m);
+          allData[id][i]=j.hourly;
+          // model init time = first hourly timestamp (UTC)
+          const nowISO=new Date().toISOString().slice(0,16);
+          const recentT=j.hourly.time.filter(t=>t<=nowISO).pop()||j.hourly.time[0];
+          modelUpdateTimes[id][m.label]=recentT;
+        }catch(e){allData[id][i]=null;console.warn(`[${id}][${m.label}]`,e.message);}
+      }));
+      renderForecast(id);
+    })
+  ]);
+  document.getElementById('ftime').textContent='Fetched: '+new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:true})+' IST';
+  btn.disabled=false;btn.textContent='▶ FETCH ALL';
+}
+
+// ═══════════════════════════════════════════
+// RENDER PANEL
+// ═══════════════════════════════════════════
+function renderPanel(cid){
+  const city=CITIES[cid];const cc=`var(--${city.cc})`;
+  document.getElementById('panel-'+cid).innerHTML=`
+  <div class="panel-inner">
+    <!-- MODE + FETCH -->
+    <div class="mode-bar">
+      <button class="mbtn ${mode==='8am'?'on m8':''}" onclick="setMode('8am',this,'m8')">08:00</button>
+      <button class="mbtn ${mode==='12pm'?'on m12':''}" onclick="setMode('12pm',this,'m12')">12:00</button>
+      <button class="mbtn ${mode==='live'?'on mlive':''}" onclick="setMode('live',this,'mlive')">LIVE</button>
+      <button class="fbtn" id="fbtn" onclick="fetchAll()">▶ FETCH ALL</button>
+    </div>
+
+    <!-- CITY META -->
+    <div class="city-meta">
+      <div class="cm-left">
+        <div class="cm-iata" style="color:${cc}">${city.iata}</div>
+        <div class="cm-loc">${city.loc}</div>
+      </div>
+      <div class="cm-center">
+        <div style="font-size:7px;color:var(--t3);letter-spacing:2px;margin-bottom:4px;font-family:var(--sans)">${city.name} TIME</div>
+        <div class="cm-ltime" id="ltime-${cid}" style="color:${cc}">--:--</div>
+        <div class="cm-date" id="ldate-${cid}">--/--/----</div>
+        <div class="cm-tz">${city.tz}</div>
+      </div>
+      <div class="cm-right">
+        <div class="cm-slotlbl" style="color:${cc}">${mode==='live'?'LIVE +48H':mode==='8am'?'00:00→20:00':'04:00→20:00'}</div>
+        <div class="cm-ist">${slotDesc(cid)}</div>
+      </div>
+    </div>
+
+    <!-- MODELS PILL BAR -->
+    <div class="mbar">${city.models.map((m,i)=>`<span class="mpill ${i===0?'top':''}" style="${i===0?`border-color:${cc};color:${cc}`:''}">${m.label}</span>`).join('')}</div>
+
+    <!-- FORECAST -->
+    <div class="sec-hdr">MULTI-MODEL FORECAST</div>
+    <div id="ftbl-${cid}">
+      <div class="status-line"><div class="status-dot none"></div>Tap FETCH ALL to load data</div>
+    </div>
+
+    <!-- MODEL UPDATES -->
+    <div class="sec-hdr">LOW / HIGH PREDICTION</div>
+    <div id="lhbox-${cid}"><div class="lh-box"><div class="lh-na">Tap FETCH ALL to load</div></div></div>
+    <div class="sec-hdr">MODEL INIT TIMES</div>
+    <div class="model-updates">
+      <div class="mu-hdr">FORECAST INIT TIME · UTC (IST) · from API</div>
+      <div class="mu-grid" id="mupdates-${cid}">${city.models.map(m=>`<div class="mu-item"><div class="mu-label">${m.label}</div><div class="mu-time" style="color:var(--t3)">—</div></div>`).join('')}</div>
+    </div>
+
+    <!-- METAR -->
+    <div class="sec-hdr">METAR · LIVE + 24H HISTORY</div>
+    <div class="metar-section" id="mwrap-${cid}">
+      <div class="metar-card"><div class="metar-stub">Tap FETCH ALL to load METAR</div></div>
+    </div>
+  </div>`;
+  renderMetar(cid);renderForecast(cid);
+}
+
+function renderAll(){Object.keys(CITIES).forEach(id=>renderPanel(id));}
+
+// ═══════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════
+function setMode(m,btn,cls){
+  mode=m;
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on','m8','m12','mlive'));
+  btn.classList.add('on',cls);renderAll();
+}
+function setCity(id,btn){
+  activeCity=id;
+  document.querySelectorAll('.ctab').forEach(b=>b.className='ctab');
+  btn.className='ctab '+{milan:'am',paris:'ap',london:'al'}[id];
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  document.getElementById('panel-'+id).classList.add('show');
+}
+function setVar(key,cid){activeVar=key;renderForecast(cid);}
+
+// ═══════════════════════════════════════════
+// SCREENSHOT
+// ═══════════════════════════════════════════
+async function takeShot(){
+  if(!Object.keys(allData).length){alert('Pehle FETCH ALL dabao!');return;}
+  const ov=document.getElementById('ssov'),msg=document.getElementById('ssmsg');
+  ov.classList.add('show');
+
+  const now=new Date();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dd=String(now.getDate()).padStart(2,'0');
+  const mon=months[now.getMonth()];
+  const yyyy=now.getFullYear();
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  const ss=String(now.getSeconds()).padStart(2,'0');
+  const mn=mode==='8am'?'8AM':mode==='12pm'?'12PM':'LIVE';
+  const dateStamp=`${dd}-${mon}-${yyyy}`;
+  const timeStamp=`${hh}-${mm}-${ss}`;
+  const cityName=CITIES[activeCity].name;
+  msg.textContent=`📸 Capturing ${cityName}...`;
+
+  const panel=document.getElementById('panel-'+activeCity);
+  const hdr=document.getElementById('hdr-capture');
+  const hiddenEls=[];const hiddenCells=[];
+
+  try{
+    // ── A. Hide METAR + MODEL UPDATES sections ──
+    const metarSec=panel.querySelector('.metar-section');
+    const mupdates=panel.querySelector('.model-updates');
+    panel.querySelectorAll('.sec-hdr').forEach(h=>{
+      const t=h.textContent.trim();
+      if(t.includes('METAR')||t.includes('MODEL LAST UPDATE')||t.includes('MODEL INIT')){
+        h.style.display='none';hiddenEls.push(h);
+      }
+    });
+    if(metarSec){metarSec.style.display='none';hiddenEls.push(metarSec);}
+    if(mupdates){mupdates.style.display='none';hiddenEls.push(mupdates);}
+
+    // ── B. Hide columns where localH < mode start ──
+    // 8AM mode  → hide localH 0–7  → screenshot shows 08:00–20:00
+    // 12PM mode → hide localH 0–11 → screenshot shows 12:00–20:00
+    // Completely independent of current time — always same range
+    if(mode!=='live'){
+      const startH=mode==='8am'?8:12;
+      const slots=getHourSlots(activeCity);
+      // thead: index 0 = model name col, skip it
+      const ths=[...panel.querySelectorAll('thead th')];
+      slots.forEach((slot,si)=>{
+        if(slot.localH<startH){
+          // hide th at index si+1
+          const th=ths[si+1];
+          if(th){th.style.display='none';hiddenCells.push(th);}
+          // hide same col td in every row
+          panel.querySelectorAll('tbody tr').forEach(tr=>{
+            const td=tr.querySelectorAll('td')[si+1];
+            if(td){td.style.display='none';hiddenCells.push(td);}
+          });
+        }
+      });
+    }
+
+    await new Promise(r=>setTimeout(r,200));
+
+    // ── C. Build wide off-screen capture div ──
+    const slots=getHourSlots(activeCity);
+    const visibleSlots=slots.filter(s=>s.localH>=(mode==='8am'?8:12));
+    // Each col ~52px + model name col 90px + padding
+    const colW=54;const modelColW=90;
+    const tableW=modelColW+(visibleSlots.length*colW)+40;
+    const captureW=Math.max(tableW+32, 900); // min 900px so it always fits
+
+    const captureWrap=document.createElement('div');
+    captureWrap.style.cssText=[
+      'position:fixed','top:-99999px','left:0',
+      'width:'+captureW+'px',
+      'background:#060810',
+      'z-index:-999',
+      'font-family:JetBrains Mono,monospace',
+    ].join(';');
+
+    // Clone header
+    const hdrClone=document.querySelector('.hdr').cloneNode(true);
+    hdrClone.style.cssText='position:relative;padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e2640;background:#060810;width:100%';
+    captureWrap.appendChild(hdrClone);
+
+    // Clone panel — make table non-scrolling, full width
+    const panelClone=panel.cloneNode(true);
+    panelClone.style.cssText='display:block;padding:12px 16px 20px;width:100%';
+    // Make tbl-wrap non-scrolling
+    panelClone.querySelectorAll('.tbl-wrap').forEach(w=>{
+      w.style.overflow='visible';
+      w.style.width='100%';
+    });
+    panelClone.querySelectorAll('.tbl-wrap table').forEach(t=>{
+      t.style.width='100%';
+      t.style.minWidth='unset';
+      t.style.tableLayout='fixed';
+    });
+    // Hide also hidden cells in clone
+    // (already hidden in original, clone copies display:none)
+    captureWrap.appendChild(panelClone);
+    document.body.appendChild(captureWrap);
+
+    await new Promise(r=>setTimeout(r,150));
+
+    const canvas=await html2canvas(captureWrap,{
+      backgroundColor:'#060810',
+      scale:2,
+      useCORS:true,
+      logging:false,
+      width:captureW,
+      windowWidth:captureW,
+      scrollX:0,scrollY:0
+    });
+    document.body.removeChild(captureWrap);
+
+    // Restore
+    hiddenEls.forEach(el=>el.style.display='');
+    hiddenCells.forEach(el=>el.style.display='');
+
+    const fname=`TTbNikhil - ${dateStamp} (${timeStamp}) - ${mn} - ${cityName}.png`;
+    const a=document.createElement('a');
+    a.href=canvas.toDataURL('image/png');
+    a.download=fname;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    msg.textContent=`✓ Saved: ${fname}`;
+    setTimeout(()=>ov.classList.remove('show'),2500);
+
+  }catch(err){
+    hiddenEls.forEach(el=>el.style.display='');
+    hiddenCells.forEach(el=>el.style.display='');
+    msg.textContent='❌ Error: '+err.message;
+    setTimeout(()=>ov.classList.remove('show'),3000);
+  }
+}
+// ═══════════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════════
+function exportCSV(){
+  if(!Object.keys(allData).length){alert('Pehle FETCH ALL dabao!');return;}
+  const date=new Date().toISOString().split('T')[0];const mn=mode==='8am'?'8AM':mode==='12pm'?'12PM':'LIVE';
+  let csv=`Temperature Tool — ${mn} — ${date}\n\n`;
+  Object.entries(CITIES).forEach(([cid,city])=>{
+    const d=allData[cid]||{};const slots=getHourSlots(cid);
+    csv+=`\n=== ${city.iata} — ${city.name} ===\n${city.loc}\n${slotDesc(cid)}\n\n`;
+    VARS.forEach(v=>{
+      csv+=`${v.label}(${v.unit})\nModel,`+slots.map(s=>s.label).join(',')+'\n';
+      city.models.forEach((m,mi)=>{
+        const hourly=d[mi]||null;
+        csv+=`${m.label},`+slots.map(s=>{if(!hourly)return'N/A';const r=getVal(hourly,v.src,s.localH,city.utcOff,s.day);return r!==null?r.toFixed(v.dec):'N/A';}).join(',')+'\n';
+      });csv+='\n';
+    });
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`WX_${mn}_${date}.csv`;a.click();
+}
+
+renderAll();
+
+</script>
+</body>
+</html>
